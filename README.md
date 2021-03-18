@@ -13,17 +13,17 @@ Project deadlines:
 
 Project proposal - Due the first meeting after the break on March 30
 ----------------------------------------------------------------------------
-1.  What makes you interested in this dataset?
+* **What makes you interested in this dataset?**
     Rideshare is pretty imortant in SF since not everybody drives and the muni isn't always dependable.
 
-2.  What is the main problem that your team is going to address in this project?
+* **What is the main problem that your team is going to address in this project?**
     * difference in prices in Uber vs Lyft for an exact same ride
     * minimum distance uber/lyft charge fees on top of minimum price
     * % diference between same distanced rides at different weather
     * whether we see higher difference in price varations in lyft vs. uber?
 
-3.  Where or how will you obtain the data?
+* **Where or how will you obtain the data?**
     Kaggle
     
-4.  How do you plan to work as a team?
+* **How do you plan to work as a team?**
     Ideas on the general directions of the project and the big picture will be pooled together from brainsotrming sessions. The project will be broken down into smaller tasks and the implementations will be divided up.
