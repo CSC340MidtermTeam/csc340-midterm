@@ -5,13 +5,14 @@ Complexity analysis: https://docs.google.com/presentation/d/1UY4et1QSRXvYYR5gLo5
 
 Project deadlines:
 ----------------------------------------------------------------------------
-* Mar. 30 - Complexity analysis (only part1?) & Project proposal
+* Mar. 30 - Complexity analysis
+* Mar. 30 - Project proposal
 * Apr. 13 - Implementation
 * Apr. 15 - Demo
 * Apr. 19 - Video summary
 
 
-Project proposal - Due the first meeting after the break on March 30
+Project proposal - Due on Tuesday after the break on March 30
 ----------------------------------------------------------------------------
 * **What makes you interested in this dataset?**
     Rideshare is pretty imortant in SF since not everybody drives and the muni isn't always dependable.
