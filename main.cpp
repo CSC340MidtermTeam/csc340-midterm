@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 #define MAX_LENGTH 512
@@ -126,6 +128,15 @@ string getCurrentDir () {
     return dir;
 }
 
+// Populates a given vector using values from a string, seperated by a ','
+void populateVectorFromLine(vector<string> &vect, string &line) {
+    string value;
+    stringstream s(line);
+    while (getline(s,value, ',')) {
+        vect.push_back(value);
+    }
+}
+
 int main() {
     typedef weatherData weatherData;
     string cabRides = getCurrentDir() + "\\data\\cab_rides.csv";
@@ -135,7 +146,63 @@ int main() {
     /*------------------------------------------------------------------------------------------------------------------
     * file IO (Raff)
     ------------------------------------------------------------------------------------------------------------------*/
+    
+    fstream fin;
+    vector<string> row;
+    string line,temp;
 
+    // Cab Rides
+    cout << "Opening " << cabRides << endl;
+    fin.open(cabRides, ios::in);
+    if (fin.fail()) {
+        cout << "Failed to open File " << cabRides << endl;
+    }
+
+    getline(fin,temp); // skip the first line
+    while (getline(fin,line)) {
+        row.clear();
+        row.resize(10);
+
+        populateVectorFromLine(row, line);
+
+        // So that we don't have to iterate over another entire vector again, 
+        // constuct your ride data here using the row vector
+    }
+    fin.close();
+    cout << "Finished!" << endl;
+
+    // Weather
+    cout << "Opening " << weather << endl;
+    fin.open(weather, ios::in);
+    if (fin.fail()) {
+        cout << "Failed to open File " << cabRides << endl;
+    }
+
+    getline(fin,temp); // skip the first line
+    while (getline(fin,line)) {
+        row.clear();
+        row.resize(8);
+
+        populateVectorFromLine(row, line);
+
+        if (row.at(4).empty()) {
+            row.at(4) = "0";
+        }
+        weatherData d;
+        d.temp = stof(row.at(0));
+        d.location = row.at(1);
+        d.clouds = stof(row.at(2));
+        d.pressure = stof(row.at(3));
+        d.rain = stof(row.at(4));
+        d.time_stamp = stoi(row.at(5));
+        d.humidity = stof(row.at(6));
+        d.wind = stof(row.at(7));
+
+        weatherTable.insert(d);
+    }
+    fin.close();
+    cout << "Finished!" << endl;
+    
     /*------------------------------------------------------------------------------------------------------------------
     * Testing WeatherTable class
     ------------------------------------------------------------------------------------------------------------------*/
@@ -160,5 +227,5 @@ int main() {
 //
 //        weatherTable.insert(d);
 //    }
-//    cout << weatherTable.getWeather("Back Bay", 1545003903).time_stamp;
+    cout << weatherTable.getWeather("Back Bay", 1545003903).time_stamp;
 }
