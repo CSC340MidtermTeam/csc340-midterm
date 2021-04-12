@@ -51,7 +51,7 @@ bool operator<(weatherData a, weatherData b) {
 }
 
 /*----------------------------------------------------------------------------------------------------------------------
-class implementation (Michael)
+class implementation
 ----------------------------------------------------------------------------------------------------------------------*/
 // Class to store all weather data.
 class WeatherTable {
@@ -82,7 +82,7 @@ public:
     }
 
     weatherData getWeather(string location, time_t time) {
-        time_t closest = LONG_MAX;
+        time_t closest =  time;
         // sort all weatherData vector (ascending).
         if (!sorted) {
             for (int i = 0; i < dataTable.size(); i++) {
@@ -138,7 +138,7 @@ void populateVectorFromLine(vector<string> &vect, string &line) {
 }
 
 /*----------------------------------------------------------------------------------------------------------------------
- * Main
+Main
 ----------------------------------------------------------------------------------------------------------------------*/
 
 int main() {
@@ -147,14 +147,10 @@ int main() {
     string weather = getCurrentDir() + "\\data\\weather.csv";
 
     WeatherTable weatherTable = WeatherTable();
-/*------------------------------------------------------------------------------------------------------------------
-* file IO (Raff)
-------------------------------------------------------------------------------------------------------------------*/
-    //1st-D: .at(0): < 2miles | .at(1): 2-5.0 miles | .at(2) > 5.0 miles
-    vector<vector<string>> lyft_rain;
-    vector<vector<string>> lyft_no_rain;
-    vector<vector<string>> uber_rain;
-    vector<vector<string>> uber_no_rain;
+
+/*----------------------------------------------------------------------------------------------------------------------
+File IO
+----------------------------------------------------------------------------------------------------------------------*/
 
     // Open csv files and read data into vectors------------------------------------------------------------------------
     fstream fin;
@@ -162,10 +158,9 @@ int main() {
     string line, temp;
 
     /*------------------------------------------------------------------------------------------------------------------
-    * weather data
+    * read weather data
     ------------------------------------------------------------------------------------------------------------------*/
 
-    // Weather
     cout << "Opening " << weather << endl;
     fin.open(weather, ios::in);
     if (fin.fail()) {
@@ -179,8 +174,9 @@ int main() {
         populateVectorFromLine(row, line);
 
         if (row.at(4).empty()) {
-            row.at(4) = "0";
+            row.at(4) = "0.0";
         }
+
         weatherData d;
         d.temp = stof(row.at(0));
         d.location = row.at(1);
@@ -188,8 +184,8 @@ int main() {
         d.pressure = stof(row.at(3));
         d.rain = stof(row.at(4));
 
-        const char *time_st = row.at(5).c_str();
-        time_t time_ =strtoull(time_st, NULL, 0);
+        const char *time_cstr = row.at(5).c_str();
+        time_t time_ = strtoull(time_cstr, NULL, 0)*1000;
 
         d.time_stamp = time_;
         d.humidity = stof(row.at(6));
@@ -201,7 +197,7 @@ int main() {
     cout << "Finished!" << endl;
 
     /*------------------------------------------------------------------------------------------------------------------
-    * cab rides data
+    * read cab rides data
     ------------------------------------------------------------------------------------------------------------------*/
     cout << "Opening " << cabRides << endl;
     fin.open(cabRides, ios::in);
@@ -209,61 +205,45 @@ int main() {
         cout << "Failed to open File " << cabRides << endl;
     }
 
-    getline(fin, temp); // skip the first line
+    getline(fin, temp); // Skip the first line (header row).
     while (getline(fin, line)) {
         row.clear();
-
         populateVectorFromLine(row, line);
 
+        // Skip rides that are shorter than 0.5 miles;
         if (stof(row.at(0)) < 0.5) {
             continue;
         }
 
         const char *time = row.at(2).c_str();
-
-        // FIXME fix getWeather
         weatherData weather = weatherTable.getWeather(row.at(4), strtoull(time, NULL, 0));
 
-//        //if this is lyft, push back to lift vector;
-//        if (row.at(1).compare("Lyft") == 0) {
-//            if (weather.rain > 0) {
-//                cout << row.at(1) << endl;
-//                cout << weather.location;
-//                cout << row.at(4) << endl;
-//                cout << weather.rain << endl;
-//                cout << row.at(2) << endl;
-//            }
-//        }
-//        uber_no_rain.push_back(row);
-//    }
+//            A bunch of cout to see if getWeather() is working properly
+//            cout << weather.location << endl;
+//            cout << row.at(4) << endl;
+//            cout << weather.time_stamp << endl;
+//            cout << row.at(2) << endl << endl;
+
+        /*--------------------------------------------------------------------------------------------------------------
+        * FIXME Group data into vectors based on weather and distance
+        --------------------------------------------------------------------------------------------------------------*/
+        // 1st-D: .at(0): < 2miles | .at(1): 2-5.0 miles | .at(2) > 5.0 miles
+        // Add another dimension for rain/no rain or keep them in separate vectors.
+        vector<vector<string>> lyft;
+        vector<vector<string>> lyft_no_rain;
+        vector<vector<string>> uber_rain;
+        vector<vector<string>> uber_no_rain;
+
+        if (weather.rain > 0.0) {
+            // if type is uberX, insert to uberX vector
+            // if type is Lyft, inset into Lyft vector
+
+        } else {
+            // if type is uberX, insert to uberX vector
+            // if type is Lyft, inset into Lyft vector
+        }
+    }
         fin.close();
         cout << "Finished!" << endl;
 
-
-        /*------------------------------------------------------------------------------------------------------------------
-        * Testing WeatherTable class
-        ------------------------------------------------------------------------------------------------------------------*/
-        vector<vector<string>> mockData = {{"42.42", "Back Bay",    "1",    "1012.14", "0.1228", "1545003901", "0.77", "11.25"},
-                                           {"42.43", "Beacon Hill", "1",    "1012.15", "0.1846", "1545003901", "0.76", "11.32"},
-                                           {"43.28", "Back Bay",    "0.81", "990.81",  "null",   "1543347920", "0.71", "8.3"},
-                                           {"42.42", "Back Bay",    "1",    "1012.14", "0.1228", "1545003902", "0.77", "11.25"}};
-//
-//    for (int i = 0; i < mockData.size(); i++) {
-//        if (mockData.at(i).at(4) == "null") {
-//            mockData.at(i).at(4) = "0";
-//        }
-//        weatherData d;
-//        d.temp = stof(mockData.at(i).at(0));
-//        d.location = (mockData.at(i).at(1));
-//        d.clouds = stof(mockData.at(i).at(2));
-//        d.pressure = stof(mockData.at(i).at(3));
-//        d.rain = stof(mockData.at(i).at(4));
-//        d.time_stamp = stoi(mockData.at(i).at(5));
-//        d.humidity = stof(mockData.at(i).at(6));
-//        d.wind = stof(mockData.at(i).at(7));
-//
-//        weatherTable.insert(d);
-//
-//    cout << weatherTable.getWeather("Back Bay", 1545003903).time_stamp;
-    }
 }
