@@ -42,7 +42,7 @@ typedef struct {
 } rideData;
 
 typedef struct {
-    uint8_t rain;
+    string weather;
     float distGroup;
     string rideType;
 
@@ -133,7 +133,7 @@ class RidesTable {
 
 public:
     vector<string> rideType = {"UberX", "Lyft"};
-    vector<float> distGroup = {2.0, 5.0, 100.0};
+    vector<float> distGroup = {2.0, 5.0, 8.0};
     vector<vector<vector<rideData>>> nRainData;
     vector<vector<vector<rideData>>> rainData;
 
@@ -193,8 +193,9 @@ public:
         else {nRainData.at(i).at(j).push_back(ride);}
     }
 
-    void processData() {
-//        vector<deliverables> results;
+    vector<deliverables> analyzeData() {
+        vector<deliverables> results;
+        results.clear();
 
         for (int i = 0; i < rideType.size(); i++) {
             for (int j = 0; j < distGroup.size(); j++) {
@@ -213,23 +214,22 @@ public:
                     result1.lowestPpm = 0;
                     result1.highestPpm = 0;
                 }
-                cout << "[" << i << "] [" << j << "]" << endl;
+
                 result1.dataCount = v1->size();
-                result1.rain = 0;
+                result1.weather = "rain";
                 result1.avgPricePerMiles = totalPpm1/result1.dataCount;
                 result1.distGroup = distGroup.at(j);
                 result1.rideType = rideType.at(i);
-
-                cout << result1.avgPricePerMiles << endl;
+                results.push_back((result1));
 
                 for (int k = 0; k < v2->size(); k++) {
                     totalPpm2 += v2->at(k).price / v2->at(k).distance;
                 }
 
 
-
             }
         }
+        return results;
     }
 };
 
@@ -359,7 +359,12 @@ File IO
             }
         }
 
-        ridesTable.processData();
+        vector<deliverables> res = ridesTable.analyzeData();
+        for (int i = 0; i<res.size(); i++) {
+            cout << res.at(i).rideType << " - ";
+            cout << res.at(i).distGroup << " miles group - $";
+            cout << res.at(i).avgPricePerMiles << endl;
+        }
 
         fin.close();
         cout << "Finished!" << endl;
