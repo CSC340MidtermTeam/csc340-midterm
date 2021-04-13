@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <vector>
+#include <cfloat>
 #define MAX_LENGTH 512
 #include <algorithm>
 
@@ -35,6 +36,11 @@ typedef struct {
     float wind;
 } weatherData;
 
+// Comparison operator to make weatherData a comparable data type
+bool operator<(weatherData a, weatherData b) {
+    return a.time_stamp < b.time_stamp;
+}
+
 typedef struct {
     double price;
     float distance;
@@ -47,19 +53,14 @@ typedef struct {
     string rideType;
 
     double avgPricePerMiles;
-    int lowestPpm;
-    int highestPpm;
+    double lowestPpm;
+    double highestPpm;
     int dataCount;
 } deliverables;
 
-// Typedef for unordered_map
+// Typedef for unordered_map components
 typedef unordered_map<string, int>::iterator iter;
 typedef pair<iter, bool> insertReturn;
-
-// Comparison operator to make weatherData a comparable data type
-bool operator<(weatherData a, weatherData b) {
-    return a.time_stamp < b.time_stamp;
-}
 
 /*----------------------------------------------------------------------------------------------------------------------
 class implementation
@@ -130,103 +131,102 @@ public:
 };
 
 class RidesTable {
+    /* 3x nested vector that contains rides data
+     * -1st layer: weather (0=clear, 1=rain)
+     * -2nd layer: rideType
+     * -3rd layer: distance group */
+    vector<vector<vector<vector<rideData>>>> data;
 
 public:
     vector<string> rideType = {"UberX", "Lyft"};
     vector<float> distGroup = {2.0, 5.0, 8.0};
-    vector<vector<vector<rideData>>> nRainData;
-    vector<vector<vector<rideData>>> rainData;
 
+    // Default constructor. Initiate empty nested vector to store data.
     RidesTable() {
-        nRainData.clear();
-        rainData.clear();
-
-        // Initiate empty 3D vector
-        for (int i = 0; i < rideType.size(); i++) {
-            vector<vector<rideData>> empty2D_c;
-            empty2D_c.clear();
-            vector<vector<rideData>> empty2D_r;
-            empty2D_r.clear();
-            for (int j = 0; j < distGroup.size(); j++) {
-                vector<rideData> empty1D_c;
-                empty1D_c.clear();
-                vector<rideData> empty1D_r;
-                empty1D_r.clear();
-                empty2D_c.push_back(empty1D_c);
-                empty2D_r.push_back(empty1D_r);
+        data.clear();
+        for (int i = 0; i < 2; i++) {
+            // Initiate empty 3D vector
+            vector<vector<vector<rideData>>> empty3D;
+            for (int j = 0; j < rideType.size(); j++) {
+                // Initiate empty 2D vector
+                vector<vector<rideData>> empty2D;
+                empty2D.clear();
+                for (int k = 0; k < distGroup.size(); k++) {
+                    // Initiate empty 1D vector
+                    vector<rideData> empty1D;
+                    empty1D.clear();
+                    empty2D.push_back(empty1D);
+                }
+                empty3D.push_back(empty2D);
             }
-            nRainData.push_back(empty2D_c);
-            rainData.push_back(empty2D_r);
+            data.push_back(empty3D);
         }
     }
 
+    // Insert row vector from each row of cab_rides file into data vectors
     void insert(const vector<string> *cabRidesRow, const weatherData *weather) {
         int i = 0;
         int j = 0;
+        int k = 0;
 
         rideData ride;
         ride.distance = stof(cabRidesRow->at(0));
         ride.price = stod(cabRidesRow->at(5));
         ride.type = cabRidesRow->at(9);
-        //stod(cabRidesRow->at(5))
 
-        // Group data based on the type of ride
-        for (; i < rideType.size(); i++) {
-            if (ride.type.compare(rideType.at(i)) == 0) {
+        // Group data based on rain condition (rain at <0.02 inch per hour is considered trace).
+        if (weather->rain > 0.02) {i = 1;}
+        else {i = 0;}
+
+        // Group data based on the type of ride. If the ride type is not in rideType vector, ignore the data.
+        for (; j < rideType.size(); j++) {
+            if (ride.type.compare(rideType.at(j)) == 0) {
                 break;
             }
         }
-        if (i >= rideType.size() ) {
+        if (j >= rideType.size() ) {
             return;
         }
 
         // Group data based on ride distance
-        for (j = 0; j < distGroup.size(); j++) {
-            if (ride.distance < distGroup.at(j)) {
+        for (k = 0; k < distGroup.size(); k++) {
+            if (ride.distance < distGroup.at(k)) {
                 break;
             }
         }
-
-        if (weather->rain > 0.01) {
-            rainData.at(i).at(j).push_back(ride);
-        }
-        else {nRainData.at(i).at(j).push_back(ride);}
+        data.at(i).at(j).at(k).push_back(ride);
     }
 
-    vector<deliverables> analyzeData() {
+    // process stored data and return vector of "deliverables" struct.
+    vector<deliverables> processData() {
         vector<deliverables> results;
         results.clear();
 
-        for (int i = 0; i < rideType.size(); i++) {
-            for (int j = 0; j < distGroup.size(); j++) {
+        // Process stored data by the following groupings: i = weather, j = ride type, k = distance.
+        for (int i = 0; i < data.size(); i ++) {
+            for (int j = 0; j < rideType.size(); j++) {
+                for (int k = 0; k < distGroup.size(); k++) {
+                    const vector<rideData> *v = &data.at(i).at(j).at(k);
+                    double totalPpm = 0.0;
 
+                    deliverables result;
+                    result.lowestPpm = DBL_MAX;
+                    result.highestPpm = 0;
+                    for (int k = 0; k < v->size(); k++) {
+                        double ppm = v->at(k).price / v->at(k).distance;
+                        if (ppm < result.lowestPpm) {result.lowestPpm = ppm;}
+                        if (ppm > result.highestPpm) {result.highestPpm = ppm;}
+                        totalPpm += ppm;
+                    }
 
-                const vector<rideData> * v1 = &rainData.at(i).at(j);
-                const vector<rideData> * v2 = &nRainData.at(i).at(j);
-                double totalPpm1 = 0.0;
-                double totalPpm2 = 0.0;
-                deliverables result1;
-                deliverables result2;
-
-                for (int k = 0; k < v1->size(); k++) {
-                    totalPpm1 += v1->at(k).price / v1->at(k).distance;
-
-                    result1.lowestPpm = 0;
-                    result1.highestPpm = 0;
+                    result.dataCount = v->size();
+                    if (i == 1) {result.weather = "rain";}
+                    else {result.weather = "clear";}
+                    result.avgPricePerMiles = totalPpm / result.dataCount;
+                    result.distGroup = distGroup.at(k);
+                    result.rideType = rideType.at(j);
+                    results.push_back((result));
                 }
-
-                result1.dataCount = v1->size();
-                result1.weather = "rain";
-                result1.avgPricePerMiles = totalPpm1/result1.dataCount;
-                result1.distGroup = distGroup.at(j);
-                result1.rideType = rideType.at(i);
-                results.push_back((result1));
-
-                for (int k = 0; k < v2->size(); k++) {
-                    totalPpm2 += v2->at(k).price / v2->at(k).distance;
-                }
-
-
             }
         }
         return results;
@@ -264,19 +264,14 @@ int main() {
     WeatherTable weatherTable = WeatherTable();
     RidesTable ridesTable = RidesTable();
 
-/*--------------------------------------------------------------------------------
-File IO
----------------------------------------------------------------------------------*/
-
-    // Open csv files and read data into vectors
+    // Variables for file IO
     fstream fin;
     vector<string> row;
     string line, temp;
 
     /*------------------------------------------------------------------------------
-    * read weather data
+    * read and store weather data
     ------------------------------------------------------------------------------*/
-
     cout << "Opening " << weather << endl;
     fin.open(weather, ios::in);
     if (fin.fail()) {
@@ -286,9 +281,7 @@ File IO
     getline(fin, temp); // skip the first line
     while (getline(fin, line)) {
         row.clear();
-
         populateVectorFromLine(row, line);
-
         if (row.at(4).empty()) {
             row.at(4) = "0.0";
         }
@@ -314,59 +307,43 @@ File IO
     cout << "Finished!" << endl;
 
     /*------------------------------------------------------------------------------
-    * read weather data
+    * read and store rides data
     ------------------------------------------------------------------------------*/
     cout << "Opening " << cabRides << endl;
     fin.open(cabRides, ios::in);
-
     if (fin.fail()) {
         cout << "Failed to open File " << cabRides << endl;
     }
 
-    getline(fin, temp); // Skip the first line (header row).
+        getline(fin, temp); // Skip the first line (header row).
     while (getline(fin, line)) {
         row.clear();
         populateVectorFromLine(row, line);
 
-        // Ignore rides that are shorter than 0.5 miles or has no price data;
+        // Ignore rides that are shorter than 0.5 miles or the ones without price data;
         if (stof(row.at(0)) < 0.5 || !row.at(5).size()) {
             continue;
         }
 
-        const char *time = row.at(2).c_str();
-        weatherData weather = weatherTable.getWeather(row.at(4), strtoull(time, NULL, 0));
+        const char *time_str = row.at(2).c_str();
+        const time_t time = strtoull(time_str, NULL, 0);
+        weatherData weather = weatherTable.getWeather(row.at(4), time);
         ridesTable.insert(&row, &weather);
+    }
+    fin.close();
+    cout << "Finished!" << endl;
 
-
-
-//            A bunch of cout to see if getWeather() is working properly
-//            cout << weather.location << endl;
-//            cout << row.at(4) << endl;
-//            cout << weather.time_stamp << endl;
-//            cout << row.at(2) << endl << endl;
-
-        /*--------------------------------------------------------------------------------------------------------------
-        * FIXME Group data into vectors based on weather and distance
-        --------------------------------------------------------------------------------------------------------------*/
-
-        }
-
-        for (int i = 0; i < 2; i++) {
-            for(int j = 0; j < 3; j++) {
-//                cout << ridesTable.rideType.at(i) << " rides. Dist limit: " << ridesTable.distGroup.at(j) << endl;
-//                cout << ridesTable.rainData.at(i).at(j).size() << endl;
-//                cout << ridesTable.nRainData.at(i).at(j).size() << endl;
-            }
-        }
-
-        vector<deliverables> res = ridesTable.analyzeData();
-        for (int i = 0; i<res.size(); i++) {
-            cout << res.at(i).rideType << " - ";
-            cout << res.at(i).distGroup << " miles group - $";
-            cout << res.at(i).avgPricePerMiles << endl;
-        }
-
-        fin.close();
-        cout << "Finished!" << endl;
+    // Process data and output results.
+    vector<deliverables> res = ridesTable.processData();
+    for (int i = 0; i<res.size(); i++) {
+        cout << res.at(i).weather << " - ";
+        cout << res.at(i).rideType << " - ";
+        cout << res.at(i).distGroup << " miles group - avg price/mile: $";
+        cout << res.at(i).avgPricePerMiles;
+        cout << " | range: $" << res.at(i).lowestPpm;
+        cout << " - $" << res.at(i).highestPpm;
+        cout << " | data count: " << res.at(i).dataCount << endl;
 
     }
+
+}
