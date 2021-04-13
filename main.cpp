@@ -249,13 +249,13 @@ File IO
 
             //if the ride type is Lyft
            if((row.at(9)).compare("Lyft") == 0){
-                 if(stof(row.at(0) <= 2.0){
+                 if(stof(row.at(0)) <= 2.0){
                     first_group_temp_lyft_rain.push_back(row);
                 }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
+                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
                      second_group_temp_lyft_rain.push_back(row);
                 }
-                if(stof(row.at(0) > 5.0){
+                if(stof(row.at(0)) > 5.0){
                      third_group_temp_lyft_rain.push_back(row);
                 
                 }
@@ -263,13 +263,13 @@ File IO
             
             //if the ride type is UberX
              if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0) <= 2.0){
+                 if(stof(row.at(0)) <= 2.0){
                     first_group_temp_uber_rain.push_back(row);
                 }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
+                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
                      second_group_temp_uber_rain.push_back(row);
                 }
-                if(stof(row.at(0) > 5.0){
+                if(stof(row.at(0)) > 5.0){
                      third_group_temp_uber_rain.push_back(row);
                 
                 }
@@ -287,7 +287,7 @@ File IO
             //temporary vectors
             vector<vector<string>> first_group_temp_lyft_no_rain;
             vector<vector<string>> second_group_temp_lyft_no_rain;
-            vector<vector<string>> third_group_temp_lyft_rain;
+            vector<vector<string>> third_group_temp_lyft_no_rain;
 
             vector<vector<string>> first_group_temp_uber_no_rain;
             vector<vector<string>> second_group_temp_uber_no_rain;
@@ -295,26 +295,26 @@ File IO
 
             //if the ride type is Lyft
             if((row.at(9)).compare("Lyft") == 0){
-                if(stof(row.at(0) <= 2.0){
+                if(stof(row.at(0)) <= 2.0){
                     first_group_temp_lyft_no_rain.push_back(row);
                 }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
+                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
                      second_group_temp_lyft_no_rain.push_back(row);
                 }
-                if(stof(row.at(0) > 5.0){
+                if(stof(row.at(0)) > 5.0){
                      third_group_temp_lyft_no_rain.push_back(row);
                 
                 }
             }
             //if the ride type is UberX
             if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0) <= 2.0){
+                 if(stof(row.at(0)) <= 2.0){
                     first_group_temp_uber_no_rain.push_back(row);
                 }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
+                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
                      second_group_temp_uber_no_rain.push_back(row);
                 }
-                if(stof(row.at(0) > 5.0){
+                if(stof(row.at(0)) > 5.0){
                      third_group_temp_uber_no_rain.push_back(row);
                 
                 }
