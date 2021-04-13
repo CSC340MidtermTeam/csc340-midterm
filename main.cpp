@@ -27,7 +27,7 @@ struct rideData{
 
 };
 
-/*   !!   */
+
 struct weatherData{
     float temp;
     string location;
