@@ -21,13 +21,10 @@ class WeatherTable;
 string getCurrentDir ();
 
 /*----------------------------------------------------------------------------------------------------------------------
-Struct (to be refactored)
+Structs
 ----------------------------------------------------------------------------------------------------------------------*/
-struct rideData{
 
-};
-
-struct weatherData{
+typedef struct {
     float temp;
     string location;
     float clouds;
@@ -36,10 +33,24 @@ struct weatherData{
     time_t time_stamp;
     float humidity;
     float wind;
-};
+} weatherData;
 
-typedef struct rideData rideData;
-typedef struct weatherData weatherData;
+typedef struct {
+    double price;
+    float distance;
+    string type;
+} rideData;
+
+typedef struct {
+    uint8_t rain;
+    float distGroup;
+    string rideType;
+
+    double avgPricePerMiles;
+    int lowestPpm;
+    int highestPpm;
+    int dataCount;
+} deliverables;
 
 // Typedef for unordered_map
 typedef unordered_map<string, int>::iterator iter;
@@ -82,6 +93,7 @@ public:
     }
 
     weatherData getWeather(string location, time_t time) {
+
         time_t closest =  time;
         // sort all weatherData vector (ascending).
         if (!sorted) {
@@ -117,6 +129,71 @@ public:
     }
 };
 
+class RidesTable {
+
+public:
+    vector<string> rideType = {"UberX", "Lyft"};
+    vector<float> distGroup = {2.0, 5.0, 100.0};
+    vector<vector<vector<rideData>>> nRainData;
+    vector<vector<vector<rideData>>> rainData;
+
+    RidesTable() {
+        nRainData.clear();
+        rainData.clear();
+
+        // Initiate empty vector
+        for (int i = 0; i < rideType.size(); i++) {
+            vector<vector<rideData>> empty2D_c;
+            empty2D_c.clear();
+            vector<vector<rideData>> empty2D_r;
+            empty2D_r.clear();
+            for (int j = 0; j < distGroup.size(); j++) {
+                vector<rideData> empty1D_c;
+                empty1D_c.clear();
+                vector<rideData> empty1D_r;
+                empty1D_r.clear();
+                empty2D_c.push_back(empty1D_c);
+                empty2D_r.push_back(empty1D_r);
+            }
+            nRainData.push_back(empty2D_c);
+            rainData.push_back(empty2D_r);
+        }
+    }
+
+    void insert(const vector<string> *cabRidesRow, const weatherData *weather) {
+        int i = 0;
+        int j = 0;
+
+        rideData ride;
+        ride.distance = stof(cabRidesRow->at(0));
+        ride.price = stod(cabRidesRow->at(0));
+        ride.type = cabRidesRow->at(9);
+        //stod(cabRidesRow->at(5))
+
+        // Group data based on the type of ride
+        for (; i < rideType.size(); i++) {
+            if (ride.type.compare(rideType.at(i)) == 0) {
+                break;
+            }
+        }
+        if (i >= rideType.size() ) {
+            return;
+        }
+
+        // Group data based on ride distance
+        for (j = 0; j < distGroup.size(); j++) {
+            if (ride.distance < distGroup.at(j)) {
+                break;
+            }
+        }
+
+        if (weather->rain > 0.01) {
+            rainData.at(i).at(j).push_back(ride);
+        }
+        else {nRainData.at(i).at(j).push_back(ride);}
+    }
+
+};
 
 
 // return string that contains the directory of the current .cpp file
@@ -147,19 +224,20 @@ int main() {
     string weather = getCurrentDir() + "\\data\\weather.csv";
 
     WeatherTable weatherTable = WeatherTable();
+    RidesTable ridesTable = RidesTable();
 
-/*----------------------------------------------------------------------------------------------------------------------
+/*--------------------------------------------------------------------------------
 File IO
-----------------------------------------------------------------------------------------------------------------------*/
+---------------------------------------------------------------------------------*/
 
-    // Open csv files and read data into vectors------------------------------------------------------------------------
+    // Open csv files and read data into vectors
     fstream fin;
     vector<string> row;
     string line, temp;
 
-    /*------------------------------------------------------------------------------------------------------------------
+    /*------------------------------------------------------------------------------
     * read weather data
-    ------------------------------------------------------------------------------------------------------------------*/
+    ------------------------------------------------------------------------------*/
 
     cout << "Opening " << weather << endl;
     fin.open(weather, ios::in);
@@ -177,16 +255,17 @@ File IO
             row.at(4) = "0.0";
         }
 
+        // Convert time string into time_t
+        const char *time_cstr = row.at(5).c_str();
+        time_t time_ = strtoull(time_cstr, NULL, 0)*1000;
+
+        // Populate weatherData struct
         weatherData d;
         d.temp = stof(row.at(0));
         d.location = row.at(1);
         d.clouds = stof(row.at(2));
         d.pressure = stof(row.at(3));
         d.rain = stof(row.at(4));
-
-        const char *time_cstr = row.at(5).c_str();
-        time_t time_ = strtoull(time_cstr, NULL, 0)*1000;
-
         d.time_stamp = time_;
         d.humidity = stof(row.at(6));
         d.wind = stof(row.at(7));
@@ -196,11 +275,12 @@ File IO
     fin.close();
     cout << "Finished!" << endl;
 
-    /*------------------------------------------------------------------------------------------------------------------
-    * read cab rides data
-    ------------------------------------------------------------------------------------------------------------------*/
+    /*------------------------------------------------------------------------------
+    * read weather data
+    ------------------------------------------------------------------------------*/
     cout << "Opening " << cabRides << endl;
     fin.open(cabRides, ios::in);
+
     if (fin.fail()) {
         cout << "Failed to open File " << cabRides << endl;
     }
@@ -209,7 +289,6 @@ File IO
     while (getline(fin, line)) {
         row.clear();
         populateVectorFromLine(row, line);
-
         // Skip rides that are shorter than 0.5 miles;
         if (stof(row.at(0)) < 0.5) {
             continue;
@@ -217,6 +296,9 @@ File IO
 
         const char *time = row.at(2).c_str();
         weatherData weather = weatherTable.getWeather(row.at(4), strtoull(time, NULL, 0));
+        ridesTable.insert(&row, &weather);
+
+
 
 //            A bunch of cout to see if getWeather() is working properly
 //            cout << weather.location << endl;
@@ -227,118 +309,18 @@ File IO
         /*--------------------------------------------------------------------------------------------------------------
         * FIXME Group data into vectors based on weather and distance
         --------------------------------------------------------------------------------------------------------------*/
-        // 1st-D: .at(0): < 2miles | .at(1): 2-5.0 miles | .at(2) > 5.0 miles
-        // Add another dimension for rain/no rain or keep them in separate vectors.
-        vector<vector<vector<string>>> lyft_rain;
-        vector<vector<vector<string>>> lyft_no_rain;
-        vector<vector<vector<string>>> uber_rain;
-        vector<vector<vector<string>>> uber_no_rain;
 
-
-        // it rains
-        if (weather.rain > 0.0) {
-
-            //temporary vectors
-            vector<vector<string>> first_group_temp_lyft_rain;
-            vector<vector<string>> second_group_temp_lyft_rain;
-            vector<vector<string>> third_group_temp_lyft_rain;
-
-            vector<vector<string>> first_group_temp_uber_rain;
-            vector<vector<string>> second_group_temp_uber_rain;
-            vector<vector<string>> third_group_temp_uber_rain;
-
-            //if the ride type is Lyft
-           if((row.at(9)).compare("Lyft") == 0){
-                 if(stof(row.at(0)) <= 2.0){
-                    first_group_temp_lyft_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
-                     second_group_temp_lyft_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 5.0){
-                     third_group_temp_lyft_rain.push_back(row);
-                
-                }
-            }
-            
-            //if the ride type is UberX
-             if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0)) <= 2.0){
-                    first_group_temp_uber_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
-                     second_group_temp_uber_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 5.0){
-                     third_group_temp_uber_rain.push_back(row);
-                
-                }
-
-            lyft_rain.push_back(first_group_temp_lyft_rain);
-            lyft_rain.push_back(second_group_temp_lyft_rain);
-            lyft_rain.push_back(third_group_temp_lyft_rain);
-
-            uber_rain.push_back(first_group_temp_uber_rain);
-            uber_rain.push_back(second_group_temp_uber_rain);
-            uber_rain.push_back(third_group_temp_uber_rain);
-
-        } else {   // it doesn't rain
-
-            //temporary vectors
-            vector<vector<string>> first_group_temp_lyft_no_rain;
-            vector<vector<string>> second_group_temp_lyft_no_rain;
-            vector<vector<string>> third_group_temp_lyft_no_rain;
-
-            vector<vector<string>> first_group_temp_uber_no_rain;
-            vector<vector<string>> second_group_temp_uber_no_rain;
-            vector<vector<string>> third_group_temp_uber_no_rain;
-
-            //if the ride type is Lyft
-            if((row.at(9)).compare("Lyft") == 0){
-                if(stof(row.at(0)) <= 2.0){
-                    first_group_temp_lyft_no_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
-                     second_group_temp_lyft_no_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 5.0){
-                     third_group_temp_lyft_no_rain.push_back(row);
-                
-                }
-            }
-            //if the ride type is UberX
-            if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0)) <= 2.0){
-                    first_group_temp_uber_no_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 2.0 && stof(row.at(0)) <= 5.0){
-                     second_group_temp_uber_no_rain.push_back(row);
-                }
-                if(stof(row.at(0)) > 5.0){
-                     third_group_temp_uber_no_rain.push_back(row);
-                
-                }
-            }
-
-            cout << first_group_temp_lyft_rain.size() << endl;
-            cout << second_group_temp_lyft_rain.size() << endl;
-            cout << third_group_temp_lyft_rain.size() << endl;
-
-
-            lyft_no_rain.push_back(first_group_temp_lyft_no_rain);
-            lyft_no_rain.push_back(second_group_temp_lyft_no_rain);
-            lyft_no_rain.push_back(third_group_temp_lyft_no_rain);
-
-            uber_no_rain.push_back(first_group_temp_uber_no_rain);
-            uber_no_rain.push_back(second_group_temp_uber_no_rain);
-            uber_no_rain.push_back(third_group_temp_uber_no_rain);
         }
 
-       
- 
+        for (int i = 0; i < 2; i++) {
+            for(int j = 0; j < 3; j++) {
+                cout << ridesTable.rideType.at(i) << " rides. Dist limit: " << ridesTable.distGroup.at(j) << endl;
+                cout << ridesTable.rainData.at(i).at(j).size() << endl;
+                cout << ridesTable.nRainData.at(i).at(j).size() << endl;
+            }
+        }
 
-    }
         fin.close();
         cout << "Finished!" << endl;
 
-}
+    }
