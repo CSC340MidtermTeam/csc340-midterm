@@ -141,7 +141,7 @@ public:
         nRainData.clear();
         rainData.clear();
 
-        // Initiate empty vector
+        // Initiate empty 3D vector
         for (int i = 0; i < rideType.size(); i++) {
             vector<vector<rideData>> empty2D_c;
             empty2D_c.clear();
@@ -166,7 +166,7 @@ public:
 
         rideData ride;
         ride.distance = stof(cabRidesRow->at(0));
-        ride.price = stod(cabRidesRow->at(0));
+        ride.price = stod(cabRidesRow->at(5));
         ride.type = cabRidesRow->at(9);
         //stod(cabRidesRow->at(5))
 
@@ -193,6 +193,44 @@ public:
         else {nRainData.at(i).at(j).push_back(ride);}
     }
 
+    void processData() {
+//        vector<deliverables> results;
+
+        for (int i = 0; i < rideType.size(); i++) {
+            for (int j = 0; j < distGroup.size(); j++) {
+
+
+                const vector<rideData> * v1 = &rainData.at(i).at(j);
+                const vector<rideData> * v2 = &nRainData.at(i).at(j);
+                double totalPpm1 = 0.0;
+                double totalPpm2 = 0.0;
+                deliverables result1;
+                deliverables result2;
+
+                for (int k = 0; k < v1->size(); k++) {
+                    totalPpm1 += v1->at(k).price / v1->at(k).distance;
+
+                    result1.lowestPpm = 0;
+                    result1.highestPpm = 0;
+                }
+                cout << "[" << i << "] [" << j << "]" << endl;
+                result1.dataCount = v1->size();
+                result1.rain = 0;
+                result1.avgPricePerMiles = totalPpm1/result1.dataCount;
+                result1.distGroup = distGroup.at(j);
+                result1.rideType = rideType.at(i);
+
+                cout << result1.avgPricePerMiles << endl;
+
+                for (int k = 0; k < v2->size(); k++) {
+                    totalPpm2 += v2->at(k).price / v2->at(k).distance;
+                }
+
+
+
+            }
+        }
+    }
 };
 
 
@@ -289,8 +327,9 @@ File IO
     while (getline(fin, line)) {
         row.clear();
         populateVectorFromLine(row, line);
-        // Skip rides that are shorter than 0.5 miles;
-        if (stof(row.at(0)) < 0.5) {
+
+        // Ignore rides that are shorter than 0.5 miles or has no price data;
+        if (stof(row.at(0)) < 0.5 || !row.at(5).size()) {
             continue;
         }
 
@@ -314,11 +353,13 @@ File IO
 
         for (int i = 0; i < 2; i++) {
             for(int j = 0; j < 3; j++) {
-                cout << ridesTable.rideType.at(i) << " rides. Dist limit: " << ridesTable.distGroup.at(j) << endl;
-                cout << ridesTable.rainData.at(i).at(j).size() << endl;
-                cout << ridesTable.nRainData.at(i).at(j).size() << endl;
+//                cout << ridesTable.rideType.at(i) << " rides. Dist limit: " << ridesTable.distGroup.at(j) << endl;
+//                cout << ridesTable.rainData.at(i).at(j).size() << endl;
+//                cout << ridesTable.nRainData.at(i).at(j).size() << endl;
             }
         }
+
+        ridesTable.processData();
 
         fin.close();
         cout << "Finished!" << endl;
