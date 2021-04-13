@@ -27,6 +27,7 @@ struct rideData{
 
 };
 
+/*   !!   */
 struct weatherData{
     float temp;
     string location;
@@ -229,114 +230,19 @@ File IO
         --------------------------------------------------------------------------------------------------------------*/
         // 1st-D: .at(0): < 2miles | .at(1): 2-5.0 miles | .at(2) > 5.0 miles
         // Add another dimension for rain/no rain or keep them in separate vectors.
-        vector<vector<vector<string>>> lyft_rain;
-        vector<vector<vector<string>>> lyft_no_rain;
-        vector<vector<vector<string>>> uber_rain;
-        vector<vector<vector<string>>> uber_no_rain;
+        vector<vector<string>> lyft;
+        vector<vector<string>> lyft_no_rain;
+        vector<vector<string>> uber_rain;
+        vector<vector<string>> uber_no_rain;
 
-
-        // it rains
         if (weather.rain > 0.0) {
+            // if type is uberX, insert to uberX vector
+            // if type is Lyft, inset into Lyft vector
 
-            //temporary vectors
-            vector<vector<string>> first_group_temp_lyft_rain;
-            vector<vector<string>> second_group_temp_lyft_rain;
-            vector<vector<string>> third_group_temp_lyft_rain;
-
-            vector<vector<string>> first_group_temp_uber_rain;
-            vector<vector<string>> second_group_temp_uber_rain;
-            vector<vector<string>> third_group_temp_uber_rain;
-
-            //if the ride type is Lyft
-           if((row.at(9)).compare("Lyft") == 0){
-                 if(stof(row.at(0) <= 2.0){
-                    first_group_temp_lyft_rain.push_back(row);
-                }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
-                     second_group_temp_lyft_rain.push_back(row);
-                }
-                if(stof(row.at(0) > 5.0){
-                     third_group_temp_lyft_rain.push_back(row);
-                
-                }
-            }
-            
-            //if the ride type is UberX
-             if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0) <= 2.0){
-                    first_group_temp_uber_rain.push_back(row);
-                }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
-                     second_group_temp_uber_rain.push_back(row);
-                }
-                if(stof(row.at(0) > 5.0){
-                     third_group_temp_uber_rain.push_back(row);
-                
-                }
-
-            lyft_rain.push_back(first_group_temp_lyft_rain);
-            lyft_rain.push_back(second_group_temp_lyft_rain);
-            lyft_rain.push_back(third_group_temp_lyft_rain);
-
-            uber_rain.push_back(first_group_temp_uber_rain);
-            uber_rain.push_back(second_group_temp_uber_rain);
-            uber_rain.push_back(third_group_temp_uber_rain);
-
-        } else {   // it doesn't rain
-
-            //temporary vectors
-            vector<vector<string>> first_group_temp_lyft_no_rain;
-            vector<vector<string>> second_group_temp_lyft_no_rain;
-            vector<vector<string>> third_group_temp_lyft_rain;
-
-            vector<vector<string>> first_group_temp_uber_no_rain;
-            vector<vector<string>> second_group_temp_uber_no_rain;
-            vector<vector<string>> third_group_temp_uber_no_rain;
-
-            //if the ride type is Lyft
-            if((row.at(9)).compare("Lyft") == 0){
-                if(stof(row.at(0) <= 2.0){
-                    first_group_temp_lyft_no_rain.push_back(row);
-                }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
-                     second_group_temp_lyft_no_rain.push_back(row);
-                }
-                if(stof(row.at(0) > 5.0){
-                     third_group_temp_lyft_no_rain.push_back(row);
-                
-                }
-            }
-            //if the ride type is UberX
-            if((row.at(9)).compare("UberX") == 0){
-                 if(stof(row.at(0) <= 2.0){
-                    first_group_temp_uber_no_rain.push_back(row);
-                }
-                if(stof(row.at(8) > 2.0 && row.at(0) <= 5.0){
-                     second_group_temp_uber_no_rain.push_back(row);
-                }
-                if(stof(row.at(0) > 5.0){
-                     third_group_temp_uber_no_rain.push_back(row);
-                
-                }
-            }
-
-            cout << first_group_temp_lyft_rain.size() << endl;
-            cout << second_group_temp_lyft_rain.size() << endl;
-            cout << third_group_temp_lyft_rain.size() << endl;
-
-
-            lyft_no_rain.push_back(first_group_temp_lyft_no_rain);
-            lyft_no_rain.push_back(second_group_temp_lyft_no_rain);
-            lyft_no_rain.push_back(third_group_temp_lyft_no_rain);
-
-            uber_no_rain.push_back(first_group_temp_uber_no_rain);
-            uber_no_rain.push_back(second_group_temp_uber_no_rain);
-            uber_no_rain.push_back(third_group_temp_uber_no_rain);
+        } else {
+            // if type is uberX, insert to uberX vector
+            // if type is Lyft, inset into Lyft vector
         }
-
-       
- 
-
     }
         fin.close();
         cout << "Finished!" << endl;
