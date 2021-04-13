@@ -11,7 +11,7 @@
 #else
 #include <unistd.h>
 #define CurrentSysDir getcwd
-#endifgit 
+#endif
 
 #define MAX_LENGTH 512
 
